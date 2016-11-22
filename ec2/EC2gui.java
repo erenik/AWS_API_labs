@@ -34,7 +34,7 @@ public class EC2gui extends JFrame
 
 	private JLabel instanceImageId, instanceSecurityGroup;
 	
-	public Graph graphCpu, graphDataIn, graphMemoryUsage;
+	public Graph graphCpu, graphDataIn, graphDiskReadOps;
 	
 	/**
 	 * Create the frame.
@@ -113,12 +113,12 @@ public class EC2gui extends JFrame
 		comps.add(graphCpu);
 		graphCpu.SetMinMaxY(0, 100);
 		
-		graphMemoryUsage = new Graph("Memory usage", "Time", "%");
-		graphMemoryUsage.SetMinMaxY(0, 100);
-		comps.add(graphMemoryUsage);
+		graphDiskReadOps = new Graph("Disk read ops", "Time", "Ops/s");
+		comps.add(graphDiskReadOps);
 		
-		graphDataIn = new Graph("Data in", "Time", "MB/s");
+		graphDataIn = new Graph("Data in", "Time", "B/s");
 		comps.add(graphDataIn);
+		graphDataIn.valueBytes = true;
 		MakeListHorizontalPixels(comps, 256);
 		
 		/// List of instances (drop-down list).

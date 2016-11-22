@@ -22,7 +22,7 @@ public class Graph extends JPanel
 	int startGapText = 10;
 	private static final int BORDER_GAP = 30;
 	private static final Stroke GRAPH_STROKE = new BasicStroke(3f);
-	private List< Tuple<Integer, Integer> > data;
+	private List< Tuple<Long, Double> > data; // Timestamp, value.
 
 	public Color lineColor = new Color(255, 0, 0, 150);
 	public Color pointColor = new Color(255, 150, 50, 255);
@@ -31,11 +31,14 @@ public class Graph extends JPanel
 
 	private String title;
 	public String xAxisLabel = "", yAxisLabel = "";
-	public int maxY; // Max Y value.
-	public int minY;
+	public float maxY; // Max Y value.
+	public float minY;
 	public boolean recalcMinMaxY = true; // If false, lock them at current values.
+	
+	/// Formats the Y axis
+	public boolean valueBytes = false;
    
-	private int maxX, minX;
+	private long maxX, minX;
 	int hatchMarksX = 10, hatchMarksY = 4; // Instead of varying it with number of data points.
 	
 	public Graph(String name, String xAxisLabel, String yAxisLabel)
@@ -43,7 +46,7 @@ public class Graph extends JPanel
 		this.xAxisLabel = xAxisLabel;
 		this.yAxisLabel = yAxisLabel;
 		title = name;
-		data = new ArrayList< Tuple<Integer, Integer> >();
+		data = new ArrayList< Tuple<Long, Double> >();
 		Random random = new Random();
 		int maxDataPoints = 16;
 		// Random initial content.
@@ -52,7 +55,7 @@ public class Graph extends JPanel
 		for (int i = 0; i < maxDataPoints ; i++) 
 		{
 			int dataPoint = random.nextInt(maxScore);
-			data.add(new Tuple<Integer, Integer>(i, dataPoint));
+			data.add(new Tuple<Long, Double>((long) i, (double) dataPoint));
 			System.out.print(dataPoint+", ");
 		}
 		System.out.println("");
@@ -63,35 +66,41 @@ public class Graph extends JPanel
 		if (recalcMinMaxY == false)
 			return;
 		// Reset min/max.
-		maxY = minY = data.get(0).y;
+		maxY = minY = data.get(0).y.floatValue();
 		for (int i = 1; i < data.size(); i++) 
 		{
-			Tuple<Integer, Integer> tuple = data.get(i);
-			int value = tuple.y;
+			Tuple<Long, Double> tuple = data.get(i);
+			float value = tuple.y.floatValue();
 			if (value > maxY)
 				maxY = value;
 			if (value < minY)
 				minY = value;
 		}		
+		// Ensure at least 1 in width.
+		if (maxY - minY <= 1)
+			maxY = minY + 1;
 	}
 	void RecalcMinMaxX()
 	{
 		// Reset min/max.
-		maxX = minX = data.get(0).x;
+		maxX = minX = data.get(0).x.longValue();
 		for (int i = 1; i < data.size(); i++) 
 		{
-			Tuple<Integer, Integer> tuple = data.get(i);
-			int value = tuple.x;
+			long value = data.get(i).x;
 			if (value > maxX)
 				maxX = value;
 			if (value < minX)
 				minX = value;
 		}		
+		// Ensure at least 1 in width.
+		if (maxX - minX <= 1)
+			maxX = minX + 1;
 	}
 	@Override
 	protected void paintComponent(Graphics g) 
 	{
 		super.paintComponent(g);
+		System.out.println("Repaining graph "+title);
 
 		RecalcMinMaxY(); // Recalc min/max Y as needed.
 		RecalcMinMaxX(); // Used for Time, so should be done regularly.
@@ -99,9 +108,8 @@ public class Graph extends JPanel
 		Graphics2D g2 = (Graphics2D)g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		int xSize = maxX - minX, 
-			ySize = maxY - minY;
-		System.out.println("xSize: "+xSize+" ySize: "+ySize);
+		long xSize = maxX - minX; 
+		double ySize = maxY - minY;
 		/// Pixels per X/Y value step.
 		int graphContentWidth = getWidth() - 2 * BORDER_GAP,
 				graphContentHeight = getHeight() - 2 * BORDER_GAP;
@@ -111,15 +119,16 @@ public class Graph extends JPanel
 			stopPixelY = startPixelY - graphContentHeight;
 		double xScale = ((double) graphContentWidth) / (xSize);
 		double yScale = ((double) graphContentHeight) / (ySize);
+		System.out.println("xSize: "+xSize+" ySize: "+ySize+"\nxScale: "+xScale+" yScale: "+yScale);
 		
 		List<Point> graphPoints = new ArrayList<Point>();
 		int max = 0, min = 0;
 		for (int i = 0; i < data.size(); i++) 
 		{
-			Tuple<Integer, Integer> tuple = data.get(i);
-			int x1 = (int) (startPixelX + tuple.x * xScale); // Point to render, X
-//			System.out.println("x render point: "+x1);
+			Tuple<Long, Double> tuple = data.get(i);
+			int x1 = (int) (startPixelX + (tuple.x - minX) * xScale); // Point to render, X
 			int y1 = (int) (startPixelY - (tuple.y - minY) * yScale); // Point to render, Y
+			System.out.println("point x: "+x1+" y: "+y1);
 			graphPoints.add(new Point(x1, y1));
 		}
 	
@@ -135,8 +144,14 @@ public class Graph extends JPanel
 		g2.drawString(xAxisLabel, getWidth() / 2, getHeight()); // X axis
 		
 		// Draw the min/max values.
-		g2.drawString(""+maxY, startGapText - 5, BORDER_GAP + 8);
-		g2.drawString(""+minY, startGapText, startPixelY);
+		String maxYStr = ""+maxY, minYStr = ""+minY;
+		if (valueBytes)
+		{
+			maxYStr = ""+(int)maxY;
+			minYStr = ""+(int)minY;
+		}
+		g2.drawString(maxYStr, startGapText - 5, BORDER_GAP + 8);
+		g2.drawString(minYStr, startGapText, startPixelY);
 		
 		// create x and y axes 
 		g2.drawLine(startPixelX, startPixelY, startPixelX, stopPixelY); // Y axis
@@ -189,9 +204,35 @@ public class Graph extends JPanel
 	}
 
 	public void SetMinMaxY(int min, int max) {
-		recalcMinMaxY = false;
 		minY = min;
 		maxY = max;
+	}
+
+	public void setData(List<Tuple<Long, Double>> dataForGraph) 
+	{
+		data = dataForGraph;
+		/// Sort the data by time-stamp...
+		Tuple<Long,Double> one, two, tmp = new Tuple<Long,Double>();
+		for (int i = 0; i < dataForGraph.size(); ++i)
+		{
+			one = dataForGraph.get(i);
+			for (int j = i + 1; j < dataForGraph.size(); ++j)
+			{
+				two = dataForGraph.get(j);
+				if (two.x < one.x)
+				{
+					// Change places.
+					tmp.x = one.x;
+					tmp.y = one.y;
+					one.x = two.x;
+					one.y = two.y;
+					two.x = tmp.x;
+					two.y = tmp.y;
+				}
+			}
+		}
+		this.repaint();
+		this.revalidate();
 	}
 
 	/*

@@ -4,9 +4,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.ec2.model.Instance;
+
+import ui.Tuple;
 
 public class EC2Main {
 
@@ -140,13 +144,45 @@ public class EC2Main {
 		ec2.getInstances();
 		
 	}
+
+	static CloudWatchHandler cwh = null;
 	protected static void OnSelectedInstanceUpdated() 
 	{
 		gui.selectedInstanceLabel.setText(gui.selectedInstanceId);
 		gui.SetInstanceState(ec2.getInstanceStatusStr(gui.selectedInstanceId));
 		gui.SetInstanceImageID(ec2.GetInstanceName(gui.selectedInstanceId));
 		gui.SetInstanceSecurityGroup(ec2.GetInstanceSecurityGroup(gui.selectedInstanceId));
+		
+		// Fetch data from CloudWatch
+		if (cwh == null)
+			cwh = new CloudWatchHandler();
+		
+		// Relevant metrics?
+	//	cwh.displayMetrics();
+		
+		
+		// Fetch data?
+		Instance inst = ec2.GetInstanceByID(gui.selectedInstanceId);
+		// Update graphs with new data.
+		gui.graphCpu.setData(GetData(inst, "CPUUtilization"));
+		gui.graphDataIn.setData(GetData(inst, "NetworkIn"));
+		gui.graphDiskReadOps.setData(GetData(inst, "DiskReadOps"));
+		
 	}
+	static List<Tuple<Long, Double>> GetData(Instance inst, String metric)
+	{
+		List<Datapoint> dataPoints = cwh.getMetricStatistics(inst, 1, metric, 1);
+		List<Tuple<Long, Double> > data = new ArrayList<>();
+		for (int i = 0; i < dataPoints.size(); ++i)
+		{
+			Datapoint dp = dataPoints.get(i);
+			dp.getAverage();
+			Tuple<Long, Double> t = new Tuple<Long, Double>(dp.getTimestamp().getTime(), dp.getAverage());
+			data.add(t);
+		}
+		return data;
+	}
+	
 	private static void TestCreateAndDeleteInstance() {
 		// TODO Auto-generated method stub
 		Instance inst = ec2.createInstance();
