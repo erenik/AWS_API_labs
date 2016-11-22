@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.amazonaws.services.cloudwatch.model.Datapoint;
@@ -25,6 +26,8 @@ public class EC2Main {
 	};
 	static EC2Handler ec2;
 	static EC2gui gui;
+	
+	static boolean guiUpdateQueried = true;
 
 	public static void main(String[] args) 
 	{
@@ -56,7 +59,6 @@ public class EC2Main {
 			}}
 		);
 		
-
 		gui.refreshListButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -143,32 +145,52 @@ public class EC2Main {
 		/// Fetch initial list?
 		ec2.getInstances();
 		
+		/// Iteratively get new data as needed.
+		while(true)
+		{
+			/// Update instance label, state, image id, security group, etc.
+			gui.selectedInstanceLabel.setText(gui.selectedInstanceId);
+			gui.SetInstanceState(ec2.getInstanceStatusStr(gui.selectedInstanceId));
+			gui.SetInstanceImageID(ec2.GetInstanceName(gui.selectedInstanceId));
+			gui.SetInstanceSecurityGroup(ec2.GetInstanceSecurityGroup(gui.selectedInstanceId));
+			
+			// Fetch data from CloudWatch
+			if (cwh == null)
+				cwh = new CloudWatchHandler();
+			Date date = new Date();
+			System.out.println("Fetching new data "+date.toString());
+			// Fetch data?
+			Instance inst = ec2.GetInstanceByID(gui.selectedInstanceId);
+			// Update graphs with new data.
+			gui.graphCpu.setData(GetData(inst, "CPUUtilization"));
+			gui.graphDataIn.setData(GetData(inst, "NetworkIn"));
+			gui.graphDiskReadOps.setData(GetData(inst, "DiskReadOps"));	
+			
+			try {
+				String oldInstanceName = gui.selectedInstanceId;
+				for (int i = 0; i < 15; ++i)
+				{
+					if (!oldInstanceName.equals(gui.selectedInstanceId) ||
+							guiUpdateQueried)
+						break;  // Update every second when instance changes, otherwise wait longer (15 secs) between updates.
+					Thread.sleep(1000);
+				}
+				guiUpdateQueried = false;
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} // New request every 3 seconds?
+		}
 	}
+	
 
 	static CloudWatchHandler cwh = null;
 	protected static void OnSelectedInstanceUpdated() 
 	{
-		gui.selectedInstanceLabel.setText(gui.selectedInstanceId);
-		gui.SetInstanceState(ec2.getInstanceStatusStr(gui.selectedInstanceId));
-		gui.SetInstanceImageID(ec2.GetInstanceName(gui.selectedInstanceId));
-		gui.SetInstanceSecurityGroup(ec2.GetInstanceSecurityGroup(gui.selectedInstanceId));
-		
-		// Fetch data from CloudWatch
-		if (cwh == null)
-			cwh = new CloudWatchHandler();
-		
-		// Relevant metrics?
-	//	cwh.displayMetrics();
-		
-		
-		// Fetch data?
-		Instance inst = ec2.GetInstanceByID(gui.selectedInstanceId);
-		// Update graphs with new data.
-		gui.graphCpu.setData(GetData(inst, "CPUUtilization"));
-		gui.graphDataIn.setData(GetData(inst, "NetworkIn"));
-		gui.graphDiskReadOps.setData(GetData(inst, "DiskReadOps"));
-		
+		guiUpdateQueried = true; // Flag to fetch new data in update thread.
 	}
+	
+	
 	static List<Tuple<Long, Double>> GetData(Instance inst, String metric)
 	{
 		List<Datapoint> dataPoints = cwh.getMetricStatistics(inst, 1, metric, 1);

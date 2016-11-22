@@ -65,6 +65,8 @@ public class Graph extends JPanel
 	{
 		if (recalcMinMaxY == false)
 			return;
+		if (data.size() == 0)
+			return;
 		// Reset min/max.
 		maxY = minY = data.get(0).y.floatValue();
 		for (int i = 1; i < data.size(); i++) 
@@ -82,6 +84,8 @@ public class Graph extends JPanel
 	}
 	void RecalcMinMaxX()
 	{
+		if (data.size() == 0)
+			return;
 		// Reset min/max.
 		maxX = minX = data.get(0).x.longValue();
 		for (int i = 1; i < data.size(); i++) 
@@ -100,7 +104,7 @@ public class Graph extends JPanel
 	protected void paintComponent(Graphics g) 
 	{
 		super.paintComponent(g);
-		System.out.println("Repaining graph "+title);
+//		System.out.println("Repainting graph "+title);
 
 		RecalcMinMaxY(); // Recalc min/max Y as needed.
 		RecalcMinMaxX(); // Used for Time, so should be done regularly.
@@ -119,7 +123,7 @@ public class Graph extends JPanel
 			stopPixelY = startPixelY - graphContentHeight;
 		double xScale = ((double) graphContentWidth) / (xSize);
 		double yScale = ((double) graphContentHeight) / (ySize);
-		System.out.println("xSize: "+xSize+" ySize: "+ySize+"\nxScale: "+xScale+" yScale: "+yScale);
+//		System.out.println("xSize: "+xSize+" ySize: "+ySize+"\nxScale: "+xScale+" yScale: "+yScale);
 		
 		List<Point> graphPoints = new ArrayList<Point>();
 		int max = 0, min = 0;
@@ -128,7 +132,7 @@ public class Graph extends JPanel
 			Tuple<Long, Double> tuple = data.get(i);
 			int x1 = (int) (startPixelX + (tuple.x - minX) * xScale); // Point to render, X
 			int y1 = (int) (startPixelY - (tuple.y - minY) * yScale); // Point to render, Y
-			System.out.println("point x: "+x1+" y: "+y1);
+//			System.out.println("point x: "+x1+" y: "+y1);
 			graphPoints.add(new Point(x1, y1));
 		}
 	
