@@ -51,6 +51,7 @@ public class Graph extends JPanel
 		int maxDataPoints = 16;
 		// Random initial content.
 		int maxScore = 20;
+		/*
 		System.out.println("Scores: ");
 		for (int i = 0; i < maxDataPoints ; i++) 
 		{
@@ -59,6 +60,7 @@ public class Graph extends JPanel
 			System.out.print(dataPoint+", ");
 		}
 		System.out.println("");
+		*/
 	}
    
 	void RecalcMinMaxY()

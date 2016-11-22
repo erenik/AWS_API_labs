@@ -118,7 +118,7 @@ public class CloudWatchHandler {
 	public List<Datapoint> getMetricStatistics(Instance instance, int durationHour, String metric, int periodInMinutes) 
 	{	
 		long duration = durationHour * 3600 * 1000;
-		System.out.println(duration);
+//		System.out.println(duration);
 		
 		Dimension instanceDimension = new Dimension();
 	    instanceDimension.setName("InstanceId");
@@ -134,7 +134,7 @@ public class CloudWatchHandler {
 	            .withEndTime(new Date());
 
 	    GetMetricStatisticsResult getMetricStatisticsResult = cloudWatch.getMetricStatistics(request);
-	    System.out.println("Datapoints received: "+getMetricStatisticsResult.getDatapoints().size());
+//	    System.out.print(".. Datapoints received: "+getMetricStatisticsResult.getDatapoints().size()+"\n");
 	    return getMetricStatisticsResult.getDatapoints();
 	}
 

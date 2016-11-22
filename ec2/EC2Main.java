@@ -37,16 +37,14 @@ public class EC2Main {
 
 		gui.setVisible(true);
 		/// When drop-down is clicked, fetch state and data for given instance.
+		/*
 		gui.instancesListDropDown.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{	
 				String cmd = e.getActionCommand();
-		//		e.
-				System.out.println("Action performed: "+cmd);
-				System.out.println("drop-down list uhhh: "+gui.selectedInstanceId);
 			}}
-		);
+		);*/
 		gui.instancesListDropDown.addItemListener(new ItemListener(){
 			@Override
 			public void itemStateChanged(ItemEvent arg0) {
@@ -109,21 +107,14 @@ public class EC2Main {
 			@Override
 			public void OnInstanceListUpdated(List<Instance> instances) 
 			{
-				System.out.println("instances: "+instances);
 				// Save list for updating it later..?
-				System.out.println("OnInstanceListUpdated");
+				System.out.println("Updating list of instances ");
 				Object selectedObj = gui.instancesListDropDown.getSelectedItem();
-				System.out.println("selectedObj "+selectedObj);
 				String selected = selectedObj != null? selectedObj.toString() : "";
-
-				System.out.println("selectedStr "+selected);
 				gui.instancesListDropDown.removeAllItems();
-				System.out.println("Remove all items ");
-				System.out.println("instances: "+instances);
 				// Add new ones.
 				for (int i = 0; i < instances.size(); ++i)
 				{
-					System.out.println("Adding item");
 					String id = instances.get(i).getInstanceId();
 					gui.instancesListDropDown.addItem(id);
 					if (id.equals(selected)){ // Found old one? Re-select it.
@@ -168,7 +159,7 @@ public class EC2Main {
 			
 			try {
 				String oldInstanceName = gui.selectedInstanceId;
-				for (int i = 0; i < 15; ++i)
+				for (int i = 0; i < 60; ++i)
 				{
 					if (!oldInstanceName.equals(gui.selectedInstanceId) ||
 							guiUpdateQueried)

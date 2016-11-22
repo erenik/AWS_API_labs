@@ -139,7 +139,7 @@ public class EC2gui extends JFrame
 			JComponent comp = comps.get(i);
 			int x = bounds.x + i * cellWidth, 
 				y = bounds.y;
-			System.out.println("x: "+x+" y: "+y+" cellWidth: "+cellWidth+" cellHeight: "+cellHeight);
+	//		System.out.println("x: "+x+" y: "+y+" cellWidth: "+cellWidth+" cellHeight: "+cellHeight);
 			comp.setBounds(x, y, cellWidth, cellHeight);
 			contentPane.add(comp);
 		}
@@ -169,7 +169,7 @@ public class EC2gui extends JFrame
 		{
 			JComponent comp = comps.get(i);
 			int x = bounds.x, y = bounds.y + i * cellHeight;
-			System.out.println("x: "+x+" y: "+y+" cellWidth: "+cellWidth+" cellHeight: "+cellHeight);
+	//		System.out.println("x: "+x+" y: "+y+" cellWidth: "+cellWidth+" cellHeight: "+cellHeight);
 			comp.setBounds(x, y, cellWidth, cellHeight);
 			heightUsed += cellHeight;
 			widthUsed += 0; // Vertical list, ignore width
