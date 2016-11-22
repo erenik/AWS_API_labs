@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -14,6 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+
+import ui.Graph;
 
 public class EC2gui extends JFrame 
 {
@@ -30,6 +33,8 @@ public class EC2gui extends JFrame
 	public JTextField textFieldSecurityGroupName;
 
 	private JLabel instanceImageId, instanceSecurityGroup;
+	
+	public Graph graphCpu, graphDataIn, graphMemoryUsage;
 	
 	/**
 	 * Create the frame.
@@ -102,6 +107,19 @@ public class EC2gui extends JFrame
 		comps.add(terminateButton);
 
 		MakeListHorizontalPixels(comps, defaultButtonHeight);
+		
+		
+		graphCpu = new Graph("CPU", "Time", "%");
+		comps.add(graphCpu);
+		graphCpu.SetMinMaxY(0, 100);
+		
+		graphMemoryUsage = new Graph("Memory usage", "Time", "%");
+		graphMemoryUsage.SetMinMaxY(0, 100);
+		comps.add(graphMemoryUsage);
+		
+		graphDataIn = new Graph("Data in", "Time", "MB/s");
+		comps.add(graphDataIn);
+		MakeListHorizontalPixels(comps, 256);
 		
 		/// List of instances (drop-down list).
 		/// - On select, show IP, state
