@@ -33,12 +33,18 @@ public class EC2Handler {
 
 	public String defaultSecurityGroupName = "muchsecurityverywow";
 	
+	/**
+	 * Create a EC2Handler object that will connect to the Amazon EC2 API, from uS WEST 2.
+	 */
 	public EC2Handler() {
 		this.ec2 =  AmazonEC2ClientBuilder.standard()
 				.withRegion(Regions.US_WEST_2) // using west region first
 				.build();
 	}	
 	
+	/**
+	 * display the hosts (EC2 instances) present
+	 */
 	public void displayHosts() {
 		DescribeHostsResult result = this.ec2.describeHosts();
 		List<Host> hosts = result.getHosts();
@@ -47,6 +53,11 @@ public class EC2Handler {
 		}
 	}
 	
+	/**
+	 * Get an instance by its ID
+	 * @param id the string ID of the desired instance
+	 * @return the com.amazonaws.services.ec2.model.Instance
+	 */
 	Instance GetInstanceByID(String id)
 	{
 //		System.out.println("GetInstanceByID: "+id);
@@ -73,6 +84,11 @@ public class EC2Handler {
 		} while (token != null);
 		return instance;
 	}
+	
+	/**
+	 * Get the list of all instances available
+	 * @return an Array list of com.amazonaws.services.ec2.model.Instance
+	 */
 	public ArrayList<Instance> getInstances() 
 	{	
 		ArrayList<Instance> finalRes = new ArrayList<Instance>();	
@@ -98,6 +114,9 @@ public class EC2Handler {
 		return finalRes;
 	}
 	
+	/**
+	 * Display the list of all instances
+	 */
 	public void displayInstances() {
 		ArrayList<Instance> instances = this.getInstances();
 		for (Instance inst : instances) {
@@ -105,11 +124,18 @@ public class EC2Handler {
 		}
 	}
 	
+	/**
+	 * Get a list of all the regions from Amazon
+	 * @return a list of com.amazonaws.services.ec2.model.Region
+	 */
 	public List<Region> getRegions() {
 		DescribeRegionsResult res = this.ec2.describeRegions();
 		return res.getRegions();
 	}
 	
+	/**
+	 * Display the endpoints of each region
+	 */
 	public void displayEndpoints() {
 		List<Region> regions = this.getRegions();
 		for (Region region : regions) {
@@ -117,13 +143,25 @@ public class EC2Handler {
 		}
 	}
 	
-	/// Creates an instance using default security group.
+	/**
+	 * Create a default instance (Ubuntu free tier, micro, key: "ddd", default security group)
+	 * @return the cerated instance
+	 */
 	public Instance createInstance() 
 	{
 		List<Instance> instancesCreated = this.createInstances("ami-5ec1673e",1,"t2.micro","ddd", defaultSecurityGroupName);
 		return instancesCreated.size() > 0? instancesCreated.get(0) : null;
 	}
 	
+	/**
+	 * Create a specific number of the same instances
+	 * @param imageId the id for the image to use
+	 * @param nb the number of instances to create
+	 * @param instanceType the type (size) of the instances
+	 * @param keyName the name of the SSH key to use
+	 * @param secName the security group name
+	 * @return the list of instances created
+	 */
 	public List<Instance> createInstances(String imageId, int nb, String instanceType, String keyName, String secName) {
 		RunInstancesRequest req = new RunInstancesRequest(imageId,nb,nb);
 		req.setInstanceType(instanceType);
@@ -139,6 +177,11 @@ public class EC2Handler {
 		return res.getReservation().getInstances();
 	}
 	
+	/**
+	 * Create an empty security group with the specified name
+	 * @param name the name of the security group
+	 * @return the security group id if it works, the name if it is alreay taken or an error string if it is impossible
+	 */
 	public String createSecurityGroup(String name) 
 	{
 		CreateSecurityGroupRequest req = new CreateSecurityGroupRequest();
@@ -161,7 +204,10 @@ public class EC2Handler {
 		return "Unable to create security group";
 	}
 	
-	// Default get by id?
+	/**
+	 * Get an instance by its ID (redundant)
+	 * @pram str the ID of the insatnce
+	 */
 	public Instance GetInstance(String str)
 	{
 		return GetInstanceByID(str);
@@ -175,10 +221,22 @@ public class EC2Handler {
 		}
 		return null;*/
 	}
+	
+	/**
+	 * Get the instance status (running, shutting down, stopped, terminating, terminating, etc.)
+	 * @param inst the instance
+	 * @return the status of the requested instance, null otherwise
+	 */
 	public String getInstanceStatusStr(Instance inst) 
 	{
 		return State.GetState(inst).text;
 	}
+	
+	/**
+	 * Get the instance status (running, shutting down, stopped, terminating, terminating, etc.)
+	 * @param instanceId the id of the requested instance
+	 * @return the status of the requested instance, null otherwise
+	 */
 	public String getInstanceStatusStr(String instanceId) 
 	{
 		Instance inst = this.GetInstance(instanceId);
@@ -188,13 +246,21 @@ public class EC2Handler {
 		return null;		
 	}
 	
+	/**
+	 * Stop a list of instances
+	 * @param instanceIds the IDs of the instances that need to be stopped
+	 */
 	public void stopInstances(List<String> instanceIds) 
 	{
 		this.ec2.stopInstances(new StopInstancesRequest(instanceIds));	
 		// Fetch new state of this one?
 		InformListeners(instanceIds);
 	}
-
+	
+	/**
+	 * MVC model - inform listeners
+	 * @pram instanceIds the IDs of the instances
+	 */
 	public void InformListeners(List<String> instanceIds)
 	{
 		for (int i = 0; i < instanceIds.size(); ++i)
@@ -207,31 +273,57 @@ public class EC2Handler {
 			}
 		}
 	}
-
+	
+	/**
+	 * Stop an instance
+	 * @param the instance that needs to be stopped
+	 */
 	public void StopInstance(Instance inst) {
 		this.StopInstance(inst.getInstanceId());
 	}
+	
+	/**
+	 * Stop an instance
+	 * @param the id of the instance that needs to be stopped
+	 */
 	public void StopInstance(String instanceId) {
 		ArrayList<String> ids = new ArrayList<String>();
 		ids.add(instanceId);
 		this.stopInstances(ids);
 	}
 	
+	/**
+	 * Terminate a list of instances
+	 * @param instanceIds the IDs of the instances to terminate
+	 */
 	public void terminateInstances(List<String> instanceIds) {
 		this.ec2.terminateInstances(new TerminateInstancesRequest(instanceIds));
 		InformListeners(instanceIds);
 	}
 	
+	/**
+	 * Terminate an instance
+	 * @param the instance that needs to be terminated
+	 */
 	public void TerminateInstance(Instance inst) {
 		TerminateInstance(inst.getInstanceId());
 	}
+	
+	/**
+	 * Terminate an instance
+	 * @param the id of the instance that needs to be terminated
+	 */
 	public void TerminateInstance(String instanceId) {
 		ArrayList<String> ids = new ArrayList<String>();
 		ids.add(instanceId);
 		this.terminateInstances(ids);	
 	}
 
-	/// Returns true if it succeeded.
+	/**
+	 * Delete a specific security group
+	 * @param id the id of the security group
+	 * @return true if the security group was deleted, false otherwise
+	 */
 	public boolean deleteSecurityGroup(String id) {
 		try 
 		{
@@ -244,7 +336,12 @@ public class EC2Handler {
 		}
 		return true;
 	}
-
+	
+	/**
+	 * Get the state of an instance
+	 * @param inst the Instance
+	 * @return the state
+	 */
 	State GetState(Instance inst)
 	{
 		String stateStr = getInstanceStatusStr(inst);
@@ -253,6 +350,12 @@ public class EC2Handler {
 			System.out.println("Unknown state: "+stateStr);
 		return s;
 	}
+	
+	/**
+	 * Sleep until a specified state has been achieved by an instance
+	 * @param inst the Instance
+	 * @param desiredState the state the instance need to achieved
+	 */
 	public void SleepUntilInstance(Instance inst, State desiredState) 
 	{
 		while (GetState(inst) != desiredState)
@@ -265,18 +368,35 @@ public class EC2Handler {
 			}
 		}
 	}
-
+	
+	/**
+	 * Print the state of an instance
+	 * @param inst the Instance
+	 */
 	public void PrintState(Instance inst) 
 	{
 		System.out.println("Instance "+inst.getInstanceId()+" state: "+getInstanceStatusStr(inst));
 	}
-
+	
+	/**
+	 * Listeners List created here
+	 */
 	List<InstanceListener> instanceListeners = new ArrayList<>();
+	
+	/**
+	 * MVC Model - add a listener
+	 */
 	public void addInstanceListener(InstanceListener instanceListener) 
 	{
 		instanceListeners.add(instanceListener);
 	}
-
+	
+	/**
+	 * @TODO refactor name
+	 * Get the image ID of an instance
+	 * @param selectedInstanceId the id of the instance
+	 * @return the image ID
+	 */
 	public String GetInstanceName(String selectedInstanceId) 
 	{
 		Instance inst = GetInstanceByID(selectedInstanceId);
@@ -286,7 +406,12 @@ public class EC2Handler {
 		}
 		return inst.getImageId();		
 	}
-
+	
+	/**
+	 * Get the security group of an instance
+	 * @param selectedInstanceId the id of the requested instance
+	 * @return the name of the security group
+	 */
 	public String GetInstanceSecurityGroup(String selectedInstanceId) {
 		Instance inst = GetInstanceByID(selectedInstanceId);
 		if (inst == null)
@@ -301,7 +426,11 @@ public class EC2Handler {
 		}
 		return s;
 	}
-
+	
+	/**
+	 * Start an instance
+	 * @prams electedInstanceId the id of the instance
+	 */
 	public void StartInstance(String selectedInstanceId) 
 	{
 		List<String> instanceIDs = new ArrayList<>();

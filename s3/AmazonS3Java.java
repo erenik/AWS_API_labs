@@ -11,12 +11,21 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
 
 public class AmazonS3Java {
-
+	
+	/**
+	 * Return a formatted string of the region name
+	 * @param r com.amazonaws.services.s3.model.Region region to get name from
+	 * @return formatted String of the region name
+	 */
 	static String RegionName(Region r)
 	{
 		String name = r.name().toLowerCase().replace('_', '-');
 		return name;
 	}
+	
+	/**
+	 * Test things with the Amazon S3 API
+	 */
 	public static void main(String[] args) 
 	{
 		S3Handler s3 = new S3Handler();
@@ -112,6 +121,10 @@ public class AmazonS3Java {
 		//s3.printBuckets(Region.getRegion(Regions.US_WEST_2));
 	}
 	
+	/**
+	 * Print the list of buckets
+	 * @param s3 S3Handler that connects to the API
+	 */
 	public void printBuckets(S3Handler s3) {
 		System.out.println("Retrieving all the buckets");
 		// we retrieve all the buckets from this region
@@ -121,6 +134,12 @@ public class AmazonS3Java {
 			System.out.println(bucket.getName());
 		}
 	}
+	
+	/**
+	 * Print a filtered list of buckets
+	 * @param s3 S3Handler that connects to the API
+	 * @param nameContains a string contained inside the bucket name, serves as a filter
+	 */
 	public static void printBuckets(S3Handler s3, String nameContains) 
 	{
 		// we retrieve all the buckets from this region

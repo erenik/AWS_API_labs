@@ -14,7 +14,11 @@ import com.amazonaws.services.ec2.model.Instance;
 import ui.Tuple;
 
 public class EC2Main {
-
+	
+	/**
+	 * sleep function, takes care of the exception handling
+	 * @param ms time to sleep in ms
+	 */
 	static void Sleep(int ms)
 	{
 		try{
@@ -24,14 +28,25 @@ public class EC2Main {
 			e.printStackTrace();
 		}
 	};
+	/**
+	 * handle connection to EC2 API
+	 */
 	static EC2Handler ec2;
+	/**
+	 * a nice GUI
+	 */
 	static EC2gui gui;
 	
 	static boolean guiUpdateQueried = true;
 
+	/**
+	 * Main function
+	 */
 	public static void main(String[] args) 
 	{
-		// TODO Auto-generated method stub	
+		/**
+		 * Create attributes
+		 */
 		ec2 = new EC2Handler();
 		gui = new EC2gui();
 
@@ -45,6 +60,9 @@ public class EC2Main {
 				String cmd = e.getActionCommand();
 			}}
 		);*/
+		/**
+		 * Detect changes on the list
+		 */
 		gui.instancesListDropDown.addItemListener(new ItemListener(){
 			@Override
 			public void itemStateChanged(ItemEvent arg0) {
@@ -57,12 +75,19 @@ public class EC2Main {
 			}}
 		);
 		
+		/**
+		 * Detect interaction with refresh button
+		 */
 		gui.refreshListButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				ec2.getInstances(); // Fetch instances, listener should automatically update the list.
 			}}
 		);
+		
+		/**
+		 * Detect interaction with Create Instance button
+		 */
 		gui.createButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) 
@@ -80,6 +105,10 @@ public class EC2Main {
 				
 			}}
 		);
+		
+		/**
+		 * detect interaction with start instance button
+		 */
 		gui.startButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) 
@@ -87,6 +116,10 @@ public class EC2Main {
 				ec2.StartInstance(gui.selectedInstanceId);
 			}}
 		);
+		
+		/**
+		 * detect interaction with stop instance button
+		 */
 		gui.stopButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) 
@@ -94,6 +127,10 @@ public class EC2Main {
 				ec2.StopInstance(gui.selectedInstanceId);
 			}}
 		);
+		
+		/**
+		 * detect interaction with terminate instance button
+		 */
 		gui.terminateButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) 
@@ -102,6 +139,9 @@ public class EC2Main {
 			}}
 		);
 		
+		/**
+		 * update list of instances
+		 */
 		ec2.addInstanceListener(new InstanceListener()
 		{
 			@Override

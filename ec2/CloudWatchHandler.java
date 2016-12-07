@@ -23,13 +23,18 @@ public class CloudWatchHandler {
 	
 	private AmazonCloudWatch cloudWatch;
 	
+	/**
+	 * Create a CloudWatchHandler object that will connect to the Amazon CloudWatch API, from uS WEST 2.
+	 */
 	public CloudWatchHandler() {
 		this.cloudWatch =  AmazonCloudWatchClientBuilder.standard()
 				.withRegion(Regions.US_WEST_2) // using west region first
 				.build();
-		//this.cloudWatch.setEndpoint("http://monitoring.us-west-2.amazonaws.com");
 	}
 	
+	/**
+	 * Display all the metrics available with Cloudwatch
+	 */
 	public void displayMetrics() {
 		List<Metric> res = this.getMetrics();
 		for(Metric metric : res) {
@@ -37,16 +42,37 @@ public class CloudWatchHandler {
 		}
 	}
 	
+	/**
+	 * Get all the metrics available with Cloudwatch
+	 * @return a list of com.amazonaws.services.cloudwatch.model.Metric
+	 */
 	public List<Metric> getMetrics() {
 		return this.cloudWatch.listMetrics().getMetrics();
 	}
 	
+	/**
+	 * Get a specific Metric from its name
+	 * @param metricName the name of the metric
+	 * @return the requested metric
+	 */
 	public Metric getMetric(String metricName) {
 		ListMetricsRequest req = new ListMetricsRequest();
 		req.setMetricName(metricName);
 		return (this.cloudWatch.listMetrics(req)).getMetrics().get(0);
 	}
 	
+	/**
+	 * @deprecated
+	 * Create an alarm in CloudWatch
+	 * @param alarmname the name for the alarm
+	 * @param alarmDescription the description of the alarm
+	 * @param metric the metric to be used for the alarm
+	 * @param threshold the threshold to trigger the alarm
+	 * @param period the period
+	 * @param operator operator to test against threshold (>=, >, <=,<)
+	 * @param evalutionPeriods
+	 * @param statistic
+	 */
 	public void addAlarm(String alarmName, String alarmDescription, Metric metric, double threshold, int period, String operator, int evaluationPeriods, String statistic) {
 		PutMetricAlarmRequest req = new PutMetricAlarmRequest();
 		req.setAlarmName(alarmName);
@@ -115,6 +141,34 @@ public class CloudWatchHandler {
 		VolumeQueueLength
 		VolumeTotalReadTime		
 	*/
+	
+	/**
+	 * Get the statistics of a specified metric for a specific instance
+	 * @param instance the instance
+	 * @param durationHour the duration in hours
+	 * @param metric the needed metric, from this list:VolumeWriteBytes, VolumeReadBytes
+		VolumeReadOps, VolumeWriteOps
+		VolumeIdleTime
+		VolumeTotalReadTime, VolumeTotalWriteTime
+		VolumeQueueLength
+		
+		BurstBalance
+		
+		DiskReadOps, DiskWriteOps
+		DiskWriteBytes, DiskReadBytes
+		NetworkIn
+		CPUUtilization
+
+		NetworkPacketsOut, NetworkPacketsIn
+		
+		StatusCheckFailed_System
+		StatusCheckFailed
+		StatusCheckFailed_Instance
+		VolumeQueueLength
+		VolumeTotalReadTime
+	 * @param periodInMinutes the interval between each point, in minutes
+	 * @return a list of com.amazonaws.services.cloudwatch.model.Datapoint
+	 */
 	public List<Datapoint> getMetricStatistics(Instance instance, int durationHour, String metric, int periodInMinutes) 
 	{	
 		long duration = durationHour * 3600 * 1000;
